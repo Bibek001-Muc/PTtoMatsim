@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "http://www.matsim.org/files/dtd/config_v2.dtd">
+<config>
+
+    <!-- ====================================================================
+         OsmConverterConfigGroup  (used by CreateNetwork.java -> Osm2MultimodalNetwork)
+
+         Strategy for Munich/Oberbayern:
+           - keep car-and-bus accessible road hierarchy as MATSim links
+           - keep light-rail / subway / tram / heavy rail as separate modes
+           - explicitly accept pedestrian / footway with BUS only (no car) so
+             Altstadt bus stops have something to snap to (otherwise they drop)
+         ==================================================================== -->
+    <module name="OsmConverter">
+        <param name="osmFile" value="../pt2matsim/input/oberbayern-260511.osm.gz"/>
+        <param name="outputNetworkFile" value="output/munich_network.xml.gz"/>
+        <param name="outputCoordinateSystem" value="DHDN_GK4"/>
+        <param name="outputDetailedLinkGeometryFile" value=""/>
+        <param name="maxLinkLength" value="500.0"/>
+        <param name="keepPaths" value="false"/>
+        <param name="keepTagsAsAttributes" value="true"/>
+        <param name="keepWaysWithPublicTransit" value="true"/>
+
+        <!-- Road hierarchy -->
+        <parameterset type="routableSubnetwork">
+            <param name="subnetworkMode" value="car"/>
+            <param name="allowedTransportModes" value="car"/>
+        </parameterset>
+        <parameterset type="routableSubnetwork">
+            <param name="subnetworkMode" value="bus"/>
+            <param name="allowedTransportModes" value="car,bus"/>
+        </parameterset>
+        <parameterset type="routableSubnetwork">
+            <param name="subnetworkMode" value="rail"/>
+            <param name="allowedTransportModes" value="rail"/>
+        </parameterset>
+        <parameterset type="routableSubnetwork">
+            <param name="subnetworkMode" value="light_rail"/>
+            <param name="allowedTransportModes" value="light_rail,rail"/>
+        </parameterset>
+        <parameterset type="routableSubnetwork">
+            <param name="subnetworkMode" value="tram"/>
+            <param name="allowedTransportModes" value="tram,light_rail"/>
+        </parameterset>
+        <parameterset type="routableSubnetwork">
+            <param name="subnetworkMode" value="subway"/>
+            <param name="allowedTransportModes" value="subway,rail"/>
+        </parameterset>
+
+        <!-- Highway defaults (pt2matsim hwyParams). Mirrors the library
+             default set but adds bus on pedestrian / living_street so
+             city-centre bus stops have link candidates to snap to. -->
+        <parameterset type="wayDefaultParams">
+            <param name="osmKey" value="highway"/><param name="osmValue" value="motorway"/>
+            <param name="lanes" value="2"/>
+            <param name="freespeed" value="33.33"/><param name="freespeedFactor" value="1.0"/>
+            <param name="laneCapacity" value="2000"/><param name="oneway" value="true"/>
+            <param name="allowedTransportModes" value="car"/>
+        </parameterset>
+        <parameterset type="wayDefaultParams">
+            <param name="osmKey" value="highway"/><param name="osmValue" value="motorway_link"/>
+            <param name="lanes" value="1"/>
+            <param name="freespeed" value="22.22"/><param name="freespeedFactor" value="1.0"/>
+            <param name="laneCapacity" value="1500"/><param name="oneway" value="true"/>
+            <param name="allowedTransportModes" value="car"/>
+        </parameterset>
+        <parameterset type="wayDefaultParams">
+            <param name="osmKey" value="highway"/><param name="osmValue" value="trunk"/>
+            <param name="lanes" value="1"/>
+            <param name="freespeed" value="22.22"/><param name="freespeedFactor" value="1.0"/>
+            <param name="laneCapacity" value="2000"/><param name="oneway" value="false"/>
+            <param name="allowedTransportModes" value="car,bus"/>
+        </parameterset>
+        <parameterset type="wayDefaultParams">
+            <param name="osmKey" value="highway"/><param name="osmValue" value="trunk_link"/>
+            <param name="lanes" value="1"/>
+            <param name="freespeed" value="13.89"/><param name="freespeedFactor" value="1.0"/>
+            <param name="laneCapacity" value="1500"/><param name="oneway" value="false"/>
+            <param name="allowedTransportModes" value="car,bus"/>
+        </parameterset>
+        <parameterset type="wayDefaultParams">
+            <param name="osmKey" value="highway"/><param name="osmValue" value="primary"/>
+            <param name="lanes" value="1"/>
+            <param name="freespeed" value="22.22"/><param name="freespeedFactor" value="1.0"/>
+            <param name="laneCapacity" value="1500"/><param name="oneway" value="false"/>
+            <param name="allowedTransportModes" value="car,bus"/>
+        </parameterset>
+        <parameterset type="wayDefaultParams">
+            <param name="osmKey" value="highway"/><param name="osmValue" value="primary_link"/>
+            <param name="lanes" value="1"/>
+            <param name="freespeed" value="16.67"/><param name="freespeedFactor" value="1.0"/>
+            <param name="laneCapacity" value="1500"/><param name="oneway" value="false"/>
+            <param name="allowedTransportModes" value="car,bus"/>
+        </parameterset>
+        <parameterset type="wayDefaultParams">
+            <param name="osmKey" value="highway"/><param name="osmValue" value="secondary"/>
+            <param name="lanes" value="1"/>
+            <param name="freespeed" value="16.67"/><param name="freespeedFactor" value="1.0"/>
+            <param name="laneCapacity" value="1000"/><param name="oneway" value="false"/>
+            <param name="allowedTransportModes" value="car,bus"/>
+        </parameterset>
+        <parameterset type="wayDefaultParams">
+            <param name="osmKey" value="highway"/><param name="osmValue" value="secondary_link"/>
+            <param name="lanes" value="1"/>
+            <param name="freespeed" value="13.89"/><param name="freespeedFactor" value="1.0"/>
+            <param name="laneCapacity" value="1000"/><param name="oneway" value="false"/>
+            <param name="allowedTransportModes" value="car,bus"/>
+        </parameterset>
+        <parameterset type="wayDefaultParams">
+            <param name="osmKey" value="highway"/><param name="osmValue" value="tertiary"/>
+            <param name="lanes" value="1"/>
+            <param name="freespeed" value="13.89"/><param name="freespeedFactor" value="1.0"/>
+            <param name="laneCapacity" value="600"/><param name="oneway" value="false"/>
+            <param name="allowedTransportModes" value="car,bus"/>
+        </parameterset>
+        <parameterset type="wayDefaultParams">
+            <param name="osmKey" value="highway"/><param name="osmValue" value="tertiary_link"/>
+            <param name="lanes" value="1"/>
+            <param name="freespeed" value="11.11"/><param name="freespeedFactor" value="1.0"/>
+            <param name="laneCapacity" value="600"/><param name="oneway" value="false"/>
+            <param name="allowedTransportModes" value="car,bus"/>
+        </parameterset>
+        <parameterset type="wayDefaultParams">
+            <param name="osmKey" value="highway"/><param name="osmValue" value="unclassified"/>
+            <param name="lanes" value="1"/>
+            <param name="freespeed" value="13.89"/><param name="freespeedFactor" value="1.0"/>
+            <param name="laneCapacity" value="600"/><param name="oneway" value="false"/>
+            <param name="allowedTransportModes" value="car,bus"/>
+        </parameterset>
+        <parameterset type="wayDefaultParams">
+            <param name="osmKey" value="highway"/><param name="osmValue" value="residential"/>
+            <param name="lanes" value="1"/>
+            <param name="freespeed" value="8.33"/><param name="freespeedFactor" value="1.0"/>
+            <param name="laneCapacity" value="600"/><param name="oneway" value="false"/>
+            <param name="allowedTransportModes" value="car,bus"/>
+        </parameterset>
+        <parameterset type="wayDefaultParams">
+            <param name="osmKey" value="highway"/><param name="osmValue" value="living_street"/>
+            <param name="lanes" value="1"/>
+            <param name="freespeed" value="4.17"/><param name="freespeedFactor" value="1.0"/>
+            <param name="laneCapacity" value="300"/><param name="oneway" value="false"/>
+            <param name="allowedTransportModes" value="car,bus"/>
+        </parameterset>
+        <parameterset type="wayDefaultParams">
+            <param name="osmKey" value="highway"/><param name="osmValue" value="service"/>
+            <param name="lanes" value="1"/>
+            <param name="freespeed" value="5.56"/><param name="freespeedFactor" value="1.0"/>
+            <param name="laneCapacity" value="200"/><param name="oneway" value="false"/>
+            <param name="allowedTransportModes" value="car,bus"/>
+        </parameterset>
+
+        <!-- Custom: pedestrian + footway are kept ONLY for buses, so that
+             Altstadt / campus stops have something to snap to. They are
+             explicitly NOT made car-accessible. -->
+        <parameterset type="wayDefaultParams">
+            <param name="osmKey" value="highway"/><param name="osmValue" value="pedestrian"/>
+            <param name="lanes" value="1"/>
+            <param name="freespeed" value="2.78"/><param name="freespeedFactor" value="1.0"/>
+            <param name="laneCapacity" value="100"/><param name="oneway" value="false"/>
+            <param name="allowedTransportModes" value="bus"/>
+        </parameterset>
+        <parameterset type="wayDefaultParams">
+            <param name="osmKey" value="highway"/><param name="osmValue" value="bus_guideway"/>
+            <param name="lanes" value="1"/>
+            <param name="freespeed" value="13.89"/><param name="freespeedFactor" value="1.0"/>
+            <param name="laneCapacity" value="600"/><param name="oneway" value="true"/>
+            <param name="allowedTransportModes" value="bus"/>
+        </parameterset>
+
+        <!-- Rail / Tram / U-Bahn / S-Bahn track network -->
+        <parameterset type="wayDefaultParams">
+            <param name="osmKey" value="railway"/><param name="osmValue" value="rail"/>
+            <param name="lanes" value="1"/>
+            <param name="freespeed" value="44.44"/><param name="freespeedFactor" value="1.0"/>
+            <param name="laneCapacity" value="9999"/><param name="oneway" value="false"/>
+            <param name="allowedTransportModes" value="rail"/>
+        </parameterset>
+        <parameterset type="wayDefaultParams">
+            <param name="osmKey" value="railway"/><param name="osmValue" value="light_rail"/>
+            <param name="lanes" value="1"/>
+            <param name="freespeed" value="22.22"/><param name="freespeedFactor" value="1.0"/>
+            <param name="laneCapacity" value="9999"/><param name="oneway" value="false"/>
+            <param name="allowedTransportModes" value="light_rail,rail"/>
+        </parameterset>
+        <parameterset type="wayDefaultParams">
+            <param name="osmKey" value="railway"/><param name="osmValue" value="tram"/>
+            <param name="lanes" value="1"/>
+            <param name="freespeed" value="13.89"/><param name="freespeedFactor" value="1.0"/>
+            <param name="laneCapacity" value="9999"/><param name="oneway" value="false"/>
+            <param name="allowedTransportModes" value="tram,light_rail"/>
+        </parameterset>
+        <parameterset type="wayDefaultParams">
+            <param name="osmKey" value="railway"/><param name="osmValue" value="subway"/>
+            <param name="lanes" value="1"/>
+            <param name="freespeed" value="22.22"/><param name="freespeedFactor" value="1.0"/>
+            <param name="laneCapacity" value="9999"/><param name="oneway" value="false"/>
+            <param name="allowedTransportModes" value="subway,rail"/>
+        </parameterset>
+    </module>
+
+    <!-- ====================================================================
+         PublicTransitMapping  (used by MapSchedule2Network -> PublicTransitMapper)
+
+         The scheduleMode values below must exactly match the strings that
+         RenameSchedulePtModes writes into the schedule. Network modes are
+         what the OSM converter wrote into each link's allowedModes.
+         ==================================================================== -->
+    <module name="PublicTransitMapping">
+        <param name="inputNetworkFile"  value="output/munich_network.xml.gz"/>
+        <param name="inputScheduleFile" value="output/schedule_renamed.xml.gz"/>
+
+        <param name="outputNetworkFile"        value="output/munich_multimodal.xml.gz"/>
+        <param name="outputScheduleFile"       value="output/schedule_mapped.xml.gz"/>
+        <param name="outputStreetNetworkFile"  value="output/munich_street_only.xml.gz"/>
+
+        <param name="modesToKeepOnCleanUp"     value="car"/>
+        <param name="numOfThreads"             value="2"/>
+        <param name="nLinkThreshold"           value="6"/>
+        <param name="maxLinkCandidateDistance" value="150.0"/>
+        <param name="candidateDistanceMultiplier" value="1.6"/>
+        <param name="maxTravelCostFactor"      value="5.0"/>
+        <param name="travelCostType"           value="linkLength"/>
+        <param name="routingWithCandidateDistance" value="true"/>
+        <param name="removeNotUsedStopFacilities"  value="true"/>
+
+        <!-- Freespeeds on these (rail-like) modes are recomputed from the
+             schedule's required travel times. The values below must match
+             the scheduleMode strings of the renamed schedule. -->
+        <param name="scheduleFreespeedModes" value="artificial,Tram,Sbahn,RE,Ubahn"/>
+
+        <parameterset type="transportModeAssignment">
+            <param name="scheduleMode"  value="Bus"/>
+            <param name="networkModes"  value="car,bus"/>
+        </parameterset>
+        <parameterset type="transportModeAssignment">
+            <param name="scheduleMode"  value="Tram"/>
+            <param name="networkModes"  value="tram,light_rail"/>
+        </parameterset>
+        <parameterset type="transportModeAssignment">
+            <param name="scheduleMode"  value="Sbahn"/>
+            <param name="networkModes"  value="rail,light_rail"/>
+        </parameterset>
+        <parameterset type="transportModeAssignment">
+            <param name="scheduleMode"  value="RE"/>
+            <param name="networkModes"  value="rail"/>
+        </parameterset>
+        <parameterset type="transportModeAssignment">
+            <param name="scheduleMode"  value="Ubahn"/>
+            <param name="networkModes"  value="subway,rail"/>
+        </parameterset>
+    </module>
+
+</config>

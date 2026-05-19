@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.munich</groupId>
+    <artifactId>PTtoMatsim</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>PTtoMatsim</name>
+    <description>
+        Driver pipeline that turns a harmonized GTFS feed + an OSM extract into a
+        MATSim multimodal network, transit schedule, and transit-vehicles file,
+        using pt2matsim as a library.
+    </description>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <matsim.version>2024.0</matsim.version>
+        <pt2matsim.version>24.5-SNAPSHOT</pt2matsim.version>
+        <!-- Aligned with pt2matsim's own pom (2.23.1) to avoid log4j
+             API/Core split-version conflicts when both jars end up on
+             the classpath. -->
+        <log4j.version>2.23.1</log4j.version>
+        <main.class>com.munich.PTtoMatsim.Pipeline</main.class>
+    </properties>
+
+    <!--
+        pt2matsim is consumed from the LOCAL Maven repository.
+        First build it once (one-off):
+            cd ../pt2matsim
+            mvn -DskipTests install
+        That installs org.matsim:pt2matsim:24.5-SNAPSHOT into ~/.m2/repository
+        which the dependency below resolves.
+    -->
+    <!--
+        Two third-party Maven repos are required:
+          * matsim  — hosts org.matsim:matsim and pt2matsim release artifacts
+          * osgeo   — hosts the GeoTools jars (org.geotools:gt-*) that
+                      pt2matsim pulls in transitively. Without this repo
+                      Maven cannot resolve gt-opengis, gt-main, gt-shapefile,
+                      jts-core etc. and the build fails with
+                      "Could not find artifact org.geotools:gt-..." errors.
+    -->
+    <repositories>
+        <repository>
+            <id>matsim</id>
+            <url>https://repo.matsim.org/repository/matsim</url>
+        </repository>
+        <repository>
+            <id>osgeo</id>
+            <url>https://repo.osgeo.org/repository/release</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.matsim</groupId>
+            <artifactId>pt2matsim</artifactId>
+            <version>${pt2matsim.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.matsim</groupId>
+            <artifactId>matsim</artifactId>
+            <version>${matsim.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>${project.artifactId}-${project.version}</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <release>17</release>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>${main.class}</mainClass>
+                                </transformer>
+                            </transformers>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.4.1</version>
+                <configuration>
+                    <mainClass>${main.class}</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
