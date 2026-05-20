@@ -223,9 +223,12 @@
         <param name="routingWithCandidateDistance" value="true"/>
         <param name="removeNotUsedStopFacilities"  value="true"/>
 
-        <!-- Freespeeds on these (rail-like) modes are recomputed from the
-             schedule's required travel times. The values below must match
-             the scheduleMode strings of the renamed schedule. -->
+        <!-- Freespeeds on these background PT modes are recomputed from the
+             schedule's required travel times. For this road/bus-lane thesis
+             scenario, only Bus is physically mapped to the road network; rail,
+             tram and subway modes are intentionally mapped with artificial
+             links so their accessibility remains without relying on incomplete
+             OSM rail/tram topology. -->
         <param name="scheduleFreespeedModes" value="artificial,Tram,Sbahn,RE,Ubahn"/>
 
         <parameterset type="transportModeAssignment">
@@ -234,19 +237,19 @@
         </parameterset>
         <parameterset type="transportModeAssignment">
             <param name="scheduleMode"  value="Tram"/>
-            <param name="networkModes"  value="tram,light_rail"/>
+            <param name="networkModes"  value=""/>
         </parameterset>
         <parameterset type="transportModeAssignment">
             <param name="scheduleMode"  value="Sbahn"/>
-            <param name="networkModes"  value="rail,light_rail"/>
+            <param name="networkModes"  value=""/>
         </parameterset>
         <parameterset type="transportModeAssignment">
             <param name="scheduleMode"  value="RE"/>
-            <param name="networkModes"  value="rail"/>
+            <param name="networkModes"  value=""/>
         </parameterset>
         <parameterset type="transportModeAssignment">
             <param name="scheduleMode"  value="Ubahn"/>
-            <param name="networkModes"  value="subway,rail"/>
+            <param name="networkModes"  value=""/>
         </parameterset>
     </module>
 

@@ -87,16 +87,18 @@ five-element vocabulary configured in `input/config.xml`:
 | GTFS rail AND nothing else fits                  | `RE` (default rail) |
 
 `input/config.xml` declares the corresponding `transportModeAssignment`
-sets that bind each schedule mode to the OSM network modes a stop /
-route is allowed to snap to:
+sets. For the bus-lane thesis scenario, only buses are physically snapped
+to the road network. Rail, tram and subway remain as schedule-based
+background PT on artificial links because the OSM rail/tram topology is
+not complete enough for route-level operations.
 
-| Schedule mode | Network modes        |
-| ------------- | -------------------- |
-| `Bus`         | `car, bus`           |
-| `Tram`        | `tram, light_rail`   |
-| `Sbahn`       | `rail, light_rail`   |
-| `RE`          | `rail`               |
-| `Ubahn`       | `subway, rail`       |
+| Schedule mode | Network modes       |
+| ------------- | ------------------- |
+| `Bus`         | `car, bus`          |
+| `Tram`        | artificial only     |
+| `Sbahn`       | artificial only     |
+| `RE`          | artificial only     |
+| `Ubahn`       | artificial only     |
 
 ## Why several stops still won't snap
 
