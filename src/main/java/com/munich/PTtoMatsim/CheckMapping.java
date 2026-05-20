@@ -69,7 +69,7 @@ public final class CheckMapping {
         try {
             CheckMappedSchedulePlausibility.run(scheduleFile, networkFile,
                     "DHDN_GK4", reportDir);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             System.err.println("[CheckMapping] CheckMappedSchedulePlausibility failed: "
                     + e.getMessage());
         }

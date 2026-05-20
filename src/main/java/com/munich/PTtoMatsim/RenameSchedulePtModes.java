@@ -106,9 +106,13 @@ public final class RenameSchedulePtModes {
 
         for (TransitLine line : schedule.getTransitLines().values()) {
             totalLines++;
-            String shortName = (String) line.getAttributes().getAttribute(
-                    AdditionalTransitLineInfo.INFO_COLUMN_SHORTNAME);
-            if (shortName == null) shortName = "";
+            String shortName = firstNonBlank(
+                    (String) line.getAttributes().getAttribute(
+                            AdditionalTransitLineInfo.INFO_COLUMN_SHORTNAME),
+                    line.getName(),
+                    (String) line.getAttributes().getAttribute(
+                            AdditionalTransitLineInfo.INFO_COLUMN_LONGNAME),
+                    line.getId().toString());
 
             for (TransitRoute route : new HashSet<>(line.getRoutes().values())) {
                 totalRoutes++;
@@ -188,6 +192,15 @@ public final class RenameSchedulePtModes {
             default:
                 return oldMode; // ferry / funicular / cable car / gondola / artificial
         }
+    }
+
+    private static String firstNonBlank(String... values) {
+        for (String value : values) {
+            if (value != null && !value.trim().isEmpty()) {
+                return value.trim();
+            }
+        }
+        return "";
     }
 
     private static boolean isCanonical(String m) {

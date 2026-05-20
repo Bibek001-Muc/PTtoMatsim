@@ -112,9 +112,15 @@ public final class CreateSchedule {
      * pipeline a second time is fast.
      */
     private static void unzipIfStale(Path zip, Path dest) throws IOException {
+        Path marker = dest.resolve(".source-zip");
+        String expectedMarker = zip.toAbsolutePath().normalize() + "\n"
+                + Files.size(zip) + "\n"
+                + Files.getLastModifiedTime(zip).toMillis() + "\n";
         boolean fresh = Files.isDirectory(dest)
-                && Files.getLastModifiedTime(dest).toMillis()
-                   >= Files.getLastModifiedTime(zip).toMillis();
+                && Files.exists(dest.resolve("stops.txt"))
+                && Files.exists(marker)
+                && Files.readString(marker, StandardCharsets.UTF_8)
+                        .equals(expectedMarker);
         if (fresh) {
             System.out.println("[CreateSchedule] reusing unpacked feed at " + dest);
             return;
@@ -138,8 +144,7 @@ public final class CreateSchedule {
                 }
             }
         }
-        // bump mtime so the freshness check next time sees the dir as up-to-date
-        Files.setLastModifiedTime(dest, Files.getLastModifiedTime(zip));
+        Files.writeString(marker, expectedMarker, StandardCharsets.UTF_8);
     }
 
     /**
