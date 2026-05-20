@@ -48,6 +48,11 @@
                       "Could not find artifact org.geotools:gt-..." errors.
     -->
     <repositories>
+        <!-- bundled pt2matsim SNAPSHOT — no local mvn install needed -->
+        <repository>
+            <id>local-mvn-repo</id>
+            <url>file://${project.basedir}/mvn-repo</url>
+        </repository>
         <repository>
             <id>matsim</id>
             <url>https://repo.matsim.org/repository/matsim</url>
