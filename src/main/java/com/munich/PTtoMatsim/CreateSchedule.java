@@ -8,10 +8,14 @@ import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -72,6 +76,7 @@ public final class CreateSchedule {
 
         Path unpacked = Paths.get(DEFAULT_UNPACKED_DIR).toAbsolutePath().normalize();
         unzipIfStale(zipPath, unpacked);
+        patchBlankAgencyIds(unpacked);
 
         Path scheduleOut = Paths.get(DEFAULT_SCHEDULE_OUT).toAbsolutePath().normalize();
         Path vehiclesOut = Paths.get(DEFAULT_VEHICLES_OUT).toAbsolutePath().normalize();
@@ -135,5 +140,46 @@ public final class CreateSchedule {
         }
         // bump mtime so the freshness check next time sees the dir as up-to-date
         Files.setLastModifiedTime(dest, Files.getLastModifiedTime(zip));
+    }
+
+    /**
+     * pt2matsim rejects routes whose agency_id field is blank, even though the
+     * GTFS spec allows omitting it when there is only one agency. The MVG subset
+     * of the merged feed has this issue for 131 routes (route_id prefix "mvg_").
+     * This method fills those blanks with "mvv_1" in-place so the parser succeeds.
+     */
+    private static void patchBlankAgencyIds(Path unpackedDir) throws IOException {
+        Path routesTxt = unpackedDir.resolve("routes.txt");
+        if (!Files.exists(routesTxt)) return;
+
+        List<String> lines = Files.readAllLines(routesTxt, StandardCharsets.UTF_8);
+        if (lines.isEmpty()) return;
+
+        String header = lines.get(0);
+        List<String> cols = Arrays.asList(header.split(",", -1));
+        int agencyCol = cols.indexOf("agency_id");
+        int routeCol  = cols.indexOf("route_id");
+        if (agencyCol < 0 || routeCol < 0) return;
+
+        int fixed = 0;
+        List<String> patched = new java.util.ArrayList<>(lines.size());
+        patched.add(header);
+        for (int i = 1; i < lines.size(); i++) {
+            String line = lines.get(i);
+            String[] fields = line.split(",", -1);
+            if (fields.length > agencyCol && fields[agencyCol].isEmpty()
+                    && fields[routeCol].startsWith("mvg_")) {
+                fields[agencyCol] = "mvv_1";
+                line = String.join(",", fields);
+                fixed++;
+            }
+            patched.add(line);
+        }
+
+        if (fixed > 0) {
+            Files.write(routesTxt, patched, StandardCharsets.UTF_8);
+            System.out.println("[CreateSchedule] patched " + fixed
+                    + " blank agency_id entries in routes.txt -> mvv_1");
+        }
     }
 }
