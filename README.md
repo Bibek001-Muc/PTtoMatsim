@@ -33,8 +33,9 @@ PTtoMatsim/
    mvn -DskipTests install
    ```
 
-2. Run the gtfs_merge step first, so
-   `../gtfs_merge/output/munich_merged.gtfs.zip` exists.
+2. Provide the merged GTFS feed — either:
+   - Run the gtfs_merge step so `../gtfs_merge/output/munich_merged.gtfs.zip` exists, **or**
+   - Copy the zip directly to `input/munich_merged.gtfs.zip` (simpler on machines without the sibling repo).
 
 3. Place the Oberbayern OSM extract at
    `../pt2matsim/input/oberbayern-260511.osm.gz` (or update the

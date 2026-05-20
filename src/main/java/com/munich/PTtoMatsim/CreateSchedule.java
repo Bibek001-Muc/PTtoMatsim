@@ -39,6 +39,9 @@ public final class CreateSchedule {
 
     public static final String DEFAULT_GTFS_ZIP =
             "../gtfs_merge/output/munich_merged.gtfs.zip";
+    /** Fallback: place the zip here if the gtfs_merge sibling dir is absent. */
+    public static final String LOCAL_GTFS_ZIP =
+            "input/munich_merged.gtfs.zip";
     public static final String DEFAULT_UNPACKED_DIR = "output/gtfs_unpacked";
     public static final String DEFAULT_SCHEDULE_OUT = "output/schedule_unmapped.xml.gz";
     public static final String DEFAULT_VEHICLES_OUT = "output/vehicles_unmapped.xml.gz";
@@ -53,10 +56,18 @@ public final class CreateSchedule {
     public static void run(String gtfsZip) throws IOException {
         Path zipPath = Paths.get(gtfsZip).toAbsolutePath().normalize();
         if (!Files.exists(zipPath)) {
-            throw new IllegalArgumentException(
-                    "GTFS zip not found: " + zipPath
-                            + "\n  Did the gtfs_merge step run? Expected "
-                            + DEFAULT_GTFS_ZIP);
+            // fallback: look for the zip placed directly in input/
+            Path local = Paths.get(LOCAL_GTFS_ZIP).toAbsolutePath().normalize();
+            if (Files.exists(local)) {
+                zipPath = local;
+            } else {
+                throw new IllegalArgumentException(
+                        "GTFS zip not found at either:\n"
+                                + "  " + zipPath + "\n"
+                                + "  " + local + "\n"
+                                + "Either run the gtfs_merge step first, or copy the "
+                                + "merged GTFS zip to input/munich_merged.gtfs.zip");
+            }
         }
 
         Path unpacked = Paths.get(DEFAULT_UNPACKED_DIR).toAbsolutePath().normalize();
