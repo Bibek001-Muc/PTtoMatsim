@@ -8,21 +8,20 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- * One-stop driver that runs the five pipeline steps in order:
+ * One-stop driver that runs the four pipeline steps in order:
  * <pre>
- *   1. CreateNetwork            OSM -> multimodal network
- *   2. CreateSchedule           GTFS zip -> unmapped schedule + vehicles
- *   3. RenameSchedulePtModes    bus/tram/subway/rail -> Bus/Tram/Ubahn/Sbahn/RE
- *   4. MapSchedule2Network      snap schedule onto network (pt2matsim PTMapper)
- *   5. CheckMapping             plausibility + unmapped-stop report
+ *   1. CreateNetwork       OSM -> multimodal network
+ *   2. CreateSchedule      GTFS zip -> unmapped schedule + vehicles
+ *   3. MapSchedule2Network snap schedule onto network (pt2matsim PTMapper)
+ *   4. CheckMapping        plausibility + unmapped-stop report
  * </pre>
  *
  * <p>Pass one or more step names on the command line to run only a
  * subset, e.g.:</p>
  * <pre>
- *   mvn -q exec:java -Dexec.args="schedule rename map check"
+ *   mvn -q exec:java -Dexec.args="schedule map check"
  * </pre>
- * Defaults to running all 5 steps when no args are given.
+ * Defaults to running all 4 steps when no args are given.
  */
 public final class Pipeline {
 
@@ -33,18 +32,20 @@ public final class Pipeline {
         Files.createDirectories(Paths.get("logs"));
 
         Set<String> steps = args.length == 0
-                ? new LinkedHashSet<>(Arrays.asList("network", "schedule", "rename", "map", "check"))
+                ? new LinkedHashSet<>(Arrays.asList("network", "schedule", "map", "check"))
                 : new LinkedHashSet<>(Arrays.asList(args));
 
         System.out.println("[Pipeline] steps = " + steps);
 
         if (steps.contains("network"))  CreateNetwork.run("input/config.xml");
-        if (steps.contains("schedule")) CreateSchedule.run(CreateSchedule.DEFAULT_GTFS_ZIP);
-        if (steps.contains("rename"))   RenameSchedulePtModes.run(
-                RenameSchedulePtModes.DEFAULT_SCHEDULE_IN,
-                RenameSchedulePtModes.DEFAULT_VEHICLES_IN,
-                RenameSchedulePtModes.DEFAULT_SCHEDULE_OUT,
-                RenameSchedulePtModes.DEFAULT_VEHICLES_OUT);
+        if (steps.contains("schedule")) {
+            CreateSchedule.run(CreateSchedule.DEFAULT_GTFS_ZIP);
+            RenameSchedulePtModes.run(
+                    RenameSchedulePtModes.DEFAULT_SCHEDULE_IN,
+                    RenameSchedulePtModes.DEFAULT_VEHICLES_IN,
+                    RenameSchedulePtModes.DEFAULT_SCHEDULE_OUT,
+                    RenameSchedulePtModes.DEFAULT_VEHICLES_OUT);
+        }
         if (steps.contains("map"))      MapSchedule2Network.run("input/config.xml");
         if (steps.contains("check"))    CheckMapping.run(
                 CheckMapping.DEFAULT_SCHEDULE,

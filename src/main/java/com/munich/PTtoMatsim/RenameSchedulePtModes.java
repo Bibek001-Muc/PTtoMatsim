@@ -15,63 +15,49 @@ import org.matsim.vehicles.VehiclesFactory;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Step 3 of the PTtoMatsim pipeline — strict mode renaming.
+ * Step 2b of the PTtoMatsim pipeline — normalises schedule modes and
+ * rewrites vehicle types to match.
  *
- * <p>{@link org.matsim.pt2matsim.run.Gtfs2TransitSchedule} writes
- * GTFS-standard transport-mode strings on every {@link TransitRoute}:
- * "bus", "tram", "subway", "rail", "ferry", "funicular", ... . That's not
- * fine-grained enough for our scenario — all four of S-Bahn, Regio (RE),
- * Inter-City and long-distance trains end up tagged "rail", which then
- * collapses them into one MATSim subnetwork.</p>
- *
- * <p>This class rewrites every transit route's mode to one of:</p>
+ * <p>pt2matsim's {@link org.matsim.pt2matsim.run.Gtfs2TransitSchedule}
+ * already converts GTFS route_type numbers to standard lowercase strings:</p>
  * <pre>
- *   "Bus"   "Tram"   "Sbahn"   "RE"   "Ubahn"
+ *   "bus"    (route_type 3 / 700-799)
+ *   "tram"   (route_type 0 / 900)
+ *   "subway" (route_type 1 / 400-409  → U-Bahn in Munich)
+ *   "rail"   (route_type 2 / 100-199  → S-Bahn + RE/RB in Munich)
  * </pre>
  *
- * <p>The mapping uses two signals:</p>
- * <ol>
- *   <li>the existing mode that GtfsConverter wrote ("bus", "tram",
- *       "subway", "rail"), and</li>
- *   <li>the GTFS <code>route_short_name</code> (carried over to the
- *       TransitLine attributes when Gtfs2TransitSchedule is invoked with
- *       <code>additionalLineInfoFile = "schedule"</code>), which lets us
- *       distinguish S-Bahn (<code>^S\\d+$</code>) from RE/RB/IRE inside
- *       the "rail" bucket.</li>
- * </ol>
+ * <p>Those strings are used as-is for bus, tram and subway. The "rail"
+ * bucket is split further into:</p>
+ * <ul>
+ *   <li><code>"sbahn"</code> — routes whose GTFS
+ *       <code>route_short_name</code> matches <code>^S\d+</code>
+ *       (S1…S8 in Munich)</li>
+ *   <li><code>"rail"</code> — all other rail (RE, RB, IC, ICE …)</li>
+ * </ul>
  *
- * <p>Lines that fall in none of the five buckets (Funicular, Ferry,
- * Gondola, Cable car) are kept but reported. Their mode stays unchanged
- * — the mapper config has no transportModeAssignment for them so they
- * will be routed on artificial links.</p>
+ * <p>Modes outside these five values (ferry, funicular, …) are left
+ * untouched and reported; they will be routed on artificial links.</p>
  *
- * <p>The companion vehicles file is rewritten in the same pass: vehicle
- * types are remapped to <code>vehicleType_Bus</code>, ..., and every
- * {@link Vehicle} that referenced an old type is reassigned.</p>
+ * <p>The companion vehicles file is rewritten in the same pass so that
+ * vehicle types are named <code>vehicleType_bus</code>, etc. and every
+ * vehicle references the correct type.</p>
  */
 public final class RenameSchedulePtModes {
 
-    public static final String MODE_BUS   = "Bus";
-    public static final String MODE_TRAM  = "Tram";
-    public static final String MODE_SBAHN = "Sbahn";
-    public static final String MODE_RE    = "RE";
-    public static final String MODE_UBAHN = "Ubahn";
+    public static final String MODE_BUS    = "bus";
+    public static final String MODE_TRAM   = "tram";
+    public static final String MODE_SUBWAY = "subway";
+    public static final String MODE_SBAHN  = "sbahn";
+    public static final String MODE_RAIL   = "rail";
 
-    // route_short_name patterns. Case insensitive. S-Bahn ids in MVV /
-    // gtfs.de use plain "S1"..."S8". U-Bahn use "U1"..."U6". RE / RB / IRE
-    // are German regional brands.
+    // S-Bahn short names: S1, S2, S20, S3 … (MVV pattern)
     private static final Pattern SBAHN_RX = Pattern.compile("^S\\d+[A-Z]?$",
-            Pattern.CASE_INSENSITIVE);
-    private static final Pattern UBAHN_RX = Pattern.compile("^U\\d+[A-Z]?$",
-            Pattern.CASE_INSENSITIVE);
-    private static final Pattern RE_RX = Pattern.compile(
-            "^(RE|RB|IRE|MEX|ALX|BRB|BOB|M|RJ|EC|IC|ICE)\\b.*",
             Pattern.CASE_INSENSITIVE);
 
     public static final String DEFAULT_SCHEDULE_IN  = "output/schedule_unmapped.xml.gz";
@@ -170,27 +156,24 @@ public final class RenameSchedulePtModes {
     }
 
     /**
-     * Decide which of {Bus, Tram, Sbahn, RE, Ubahn} (or the original mode
-     * if no rule fits) this route belongs to.
+     * Map the pt2matsim-assigned mode string to one of the five canonical
+     * modes, using the GTFS route_short_name only to split "rail" into
+     * "sbahn" vs "rail".
      */
     static String classify(String oldMode, String shortName) {
         if (oldMode == null) return MODE_BUS;
         switch (oldMode) {
-            case "bus":   return MODE_BUS;
-            case "tram":  return MODE_TRAM;
-            case "subway": return MODE_UBAHN;
+            case "bus":    return MODE_BUS;
+            case "tram":   return MODE_TRAM;
+            case "subway": return MODE_SUBWAY;
             case "rail":
-                if (shortName != null) {
-                    if (SBAHN_RX.matcher(shortName.trim()).matches()) return MODE_SBAHN;
-                    if (UBAHN_RX.matcher(shortName.trim()).matches()) return MODE_UBAHN;
-                    if (RE_RX.matcher(shortName.trim()).matches())   return MODE_RE;
+                if (shortName != null
+                        && SBAHN_RX.matcher(shortName.trim()).matches()) {
+                    return MODE_SBAHN;
                 }
-                // Default rail bucket = RE (regional). Long-distance ICE/IC
-                // also land here, which is fine for our scenario: their
-                // routing is handled by the same transportModeAssignment.
-                return MODE_RE;
+                return MODE_RAIL;
             default:
-                return oldMode; // ferry / funicular / cable car / gondola / artificial
+                return oldMode; // ferry / funicular / gondola / artificial
         }
     }
 
@@ -204,8 +187,8 @@ public final class RenameSchedulePtModes {
     }
 
     private static boolean isCanonical(String m) {
-        return MODE_BUS.equals(m) || MODE_TRAM.equals(m)
-                || MODE_SBAHN.equals(m) || MODE_RE.equals(m) || MODE_UBAHN.equals(m);
+        return MODE_BUS.equals(m) || MODE_TRAM.equals(m) || MODE_SUBWAY.equals(m)
+                || MODE_SBAHN.equals(m) || MODE_RAIL.equals(m);
     }
 
     /**

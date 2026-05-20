@@ -229,26 +229,26 @@
              tram and subway modes are intentionally mapped with artificial
              links so their accessibility remains without relying on incomplete
              OSM rail/tram topology. -->
-        <param name="scheduleFreespeedModes" value="artificial,Tram,Sbahn,RE,Ubahn"/>
+        <param name="scheduleFreespeedModes" value="artificial,tram,sbahn,rail,subway"/>
 
         <parameterset type="transportModeAssignment">
-            <param name="scheduleMode"  value="Bus"/>
+            <param name="scheduleMode"  value="bus"/>
             <param name="networkModes"  value="car,bus"/>
         </parameterset>
         <parameterset type="transportModeAssignment">
-            <param name="scheduleMode"  value="Tram"/>
+            <param name="scheduleMode"  value="tram"/>
             <param name="networkModes"  value=""/>
         </parameterset>
         <parameterset type="transportModeAssignment">
-            <param name="scheduleMode"  value="Sbahn"/>
+            <param name="scheduleMode"  value="sbahn"/>
             <param name="networkModes"  value=""/>
         </parameterset>
         <parameterset type="transportModeAssignment">
-            <param name="scheduleMode"  value="RE"/>
+            <param name="scheduleMode"  value="rail"/>
             <param name="networkModes"  value=""/>
         </parameterset>
         <parameterset type="transportModeAssignment">
-            <param name="scheduleMode"  value="Ubahn"/>
+            <param name="scheduleMode"  value="subway"/>
             <param name="networkModes"  value=""/>
         </parameterset>
     </module>
