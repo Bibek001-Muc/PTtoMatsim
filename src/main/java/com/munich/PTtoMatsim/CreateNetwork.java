@@ -3,6 +3,10 @@ package com.munich.PTtoMatsim;
 import org.matsim.pt2matsim.config.OsmConverterConfigGroup;
 import org.matsim.pt2matsim.run.Osm2MultimodalNetwork;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 /**
  * Step 1 of the PTtoMatsim pipeline.
  *
@@ -29,7 +33,32 @@ public final class CreateNetwork {
     public static void run(String configFile) {
         System.out.println("[CreateNetwork] config = " + configFile);
         OsmConverterConfigGroup config = OsmConverterConfigGroup.loadConfig(configFile);
-        System.out.println("[CreateNetwork] OSM input        : " + config.getOsmFile());
+
+        // Fall back to input/<filename> if the configured OSM path doesn't exist
+        Path osmPath = Paths.get(config.getOsmFile()).toAbsolutePath().normalize();
+        if (!Files.exists(osmPath)) {
+            Path local = Paths.get("input")
+                    .resolve(osmPath.getFileName()).toAbsolutePath().normalize();
+            if (Files.exists(local)) {
+                config.setOsmFile(local.toString());
+                osmPath = local;
+            } else {
+                throw new IllegalArgumentException(
+                        "OSM file not found at either:\n"
+                        + "  " + osmPath + "\n"
+                        + "  " + local + "\n"
+                        + "Place the OSM extract at input/" + osmPath.getFileName()
+                        + " or update osmFile in input/config.xml");
+            }
+        }
+
+        // Empty geometry path → AccessDeniedException on Windows (tries to write to a directory).
+        if (config.getOutputDetailedLinkGeometryFile() == null
+                || config.getOutputDetailedLinkGeometryFile().isBlank()) {
+            config.setOutputDetailedLinkGeometryFile("output/munich_link_geometry.csv");
+        }
+
+        System.out.println("[CreateNetwork] OSM input        : " + osmPath);
         System.out.println("[CreateNetwork] output network   : " + config.getOutputNetworkFile());
         System.out.println("[CreateNetwork] CRS              : " + config.getOutputCoordinateSystem());
 
