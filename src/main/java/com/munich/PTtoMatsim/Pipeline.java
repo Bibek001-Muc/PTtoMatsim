@@ -1,6 +1,8 @@
 package com.munich.PTtoMatsim;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -27,6 +29,9 @@ public final class Pipeline {
     private Pipeline() {}
 
     public static void main(String[] args) throws IOException {
+        Files.createDirectories(Paths.get("output"));
+        Files.createDirectories(Paths.get("logs"));
+
         Set<String> steps = args.length == 0
                 ? new LinkedHashSet<>(Arrays.asList("network", "schedule", "rename", "map", "check"))
                 : new LinkedHashSet<>(Arrays.asList(args));

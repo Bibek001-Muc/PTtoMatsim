@@ -2,8 +2,10 @@
 target/
 
 # Output and log files (large generated artifacts)
-output/
-logs/
+output/*
+!output/.gitkeep
+logs/*
+!logs/.gitkeep
 
 # IntelliJ IDEA
 .idea/
